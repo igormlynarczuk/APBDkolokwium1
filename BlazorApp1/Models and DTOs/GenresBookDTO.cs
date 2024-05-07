@@ -5,7 +5,7 @@ public class GenresBookDTO
     public int PK { get; set; }
     public string title { get; set; } = string.Empty;
     public int OwnerId { get; set; }
-    public IEnumerable<Genre> Genres { get; set; } = new List<Genre>();
+    public IEnumerable<GenreDTO> Genres { get; set; } = new List<GenreDTO>();
 }
 
 public class GenreDTO
