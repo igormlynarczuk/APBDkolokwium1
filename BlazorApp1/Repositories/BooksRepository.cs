@@ -64,9 +64,45 @@ public class BooksRepository : IBooksRepository
 	    return res is not null;
     }
 
-    public Task<GenresBookDTO> GetGenresBook(int id)
+    public async Task<GenresBookDTO> GetGenresBook(int id)
     {
-	    throw new NotImplementedException();
+	    List<GenreDTO> genres = new List<GenreDTO>();
+ 
+	    using (SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default")))
+	    {
+		    await connection.OpenAsync();
+ 
+		    string query = @"SELECT genres.PK, genres.name 
+                                 FROM genres 
+                                 INNER JOIN books_genres ON genres.PK = books_genres.FK_genre 
+                                 WHERE books_genres.FK_book = @BookId;";
+ 
+		    using (SqlCommand command = new SqlCommand(query, connection))
+		    {
+			    command.Parameters.AddWithValue("@BookId", id);
+			    SqlDataReader reader = await command.ExecuteReaderAsync();
+			    while (reader.Read())
+			    {
+				    genres.Add(new GenreDTO
+				    {
+					    PK = Convert.ToInt32(reader["PK"]),
+					    nam = reader["name"].ToString()
+				    });
+			    }
+		    }
+	    }
+ 
+	    // Pobranie informacji o książce, np. tytuł i właściciel
+	    // Ta część może być dostosowana do rzeczywistych danych w bazie danych
+	    GenresBookDTO bookWithGenres = new GenresBookDTO
+	    {
+		    PK = id, // Zakładam, że PK to identyfikator książki
+		    title = "Tytuł książki", // Przykładowy tytuł, można pobrać z bazy danych
+		    OwnerId = 1, // Przykładowy identyfikator właściciela, można pobrać z bazy danych
+		    Genres = genres
+	    };
+ 
+	    return bookWithGenres;
     }
 
     public async Task AddNewBookWithProcedures(NewBookWithGenres newBookWithGenres)
