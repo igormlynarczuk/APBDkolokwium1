@@ -20,56 +20,55 @@ public class BooksController
 
         // Version with implicit transaction
         [HttpPost]
-        public async Task<IActionResult> AddAnimal(NewBookWithGenres NewBookWithGenres)
+        public async Task<IActionResult> AddAnimal(NewBookWithGenres newBookWithGenres)
         {
-            if (!await _booksRepository.DoesOwnerExist(Models_and_DTOs.NewBookWithGenres.OwnerId))
-                return NotFound($"Owner with given ID - {newAnimalWithProcedures.OwnerId} doesn't exist");
+            if (!await _booksRepository.DoesOwnerExist(newBookWithGenres.OwnerId))
+                return NotFound($"Owner with given ID - {newBookWithGenres.OwnerId} doesn't exist");
 
-            foreach (var procedure in newAnimalWithProcedures.Procedures)
+            foreach (var genre in newBookWithGenres.Genres)
             {
-                if (!await _animalsRepository.DoesProcedureExist(procedure.ProcedureId))
-                    return NotFound($"Procedure with given ID - {procedure.ProcedureId} doesn't exist");
+                if (!await _booksRepository.DoesGenreExist(genre.PK))
+                    return NotFound($"Procedure with given ID - {genre.PK} doesn't exist");
             }
 
-            await _animalsRepository.AddNewAnimalWithProcedures(newAnimalWithProcedures);
+            await _booksRepository.AddNewBookWithProcedures(newBookWithGenres);
 
-            return Created(Request.Path.Value ?? "api/animals", newAnimalWithProcedures);
+            return Created(Request.Path.Value ?? "api/animals", newBookWithGenres);
         }
         
         // Version with transaction scope
         [HttpPost]
         [Route("with-scope")]
-        public async Task<IActionResult> AddAnimalV2(NewAnimalWithProcedures newAnimalWithProcedures)
+        public async Task<IActionResult> AddAnimalV2(NewBookWithGenres newBookWithGenres)
         {
 
-            if (!await _animalsRepository.DoesOwnerExist(newAnimalWithProcedures.OwnerId))
-                return NotFound($"Owner with given ID - {newAnimalWithProcedures.OwnerId} doesn't exist");
+            if (!await _booksRepository.DoesOwnerExist(newBookWithGenres.OwnerId))
+                return NotFound($"Owner with given ID - {newBookWithGenres.OwnerId} doesn't exist");
 
-            foreach (var procedure in newAnimalWithProcedures.Procedures)
+            foreach (var genre in newBookWithGenres.Genres)
             {
-                if (!await _animalsRepository.DoesProcedureExist(procedure.ProcedureId))
-                    return NotFound($"Procedure with given ID - {procedure.ProcedureId} doesn't exist");
+                if (!await _booksRepository.DoesGenreExist(genre.PK))
+                    return NotFound($"Procedure with given ID - {genre.PK} doesn't exist");
             }
 
             using (TransactionScope scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
-                var id = await _animalsRepository.AddAnimal(new NewAnimalDTO()
+                var id = await _booksRepository.AddBook(new NewBookDTO()
                 {
-                    Name = newAnimalWithProcedures.Name,
-                    Type = newAnimalWithProcedures.Type,
-                    AdmissionDate = newAnimalWithProcedures.AdmissionDate,
-                    OwnerId = newAnimalWithProcedures.OwnerId
+                    PK = newBookWithGenres.PK,
+                    title = newBookWithGenres.title,
+                    OwnerId = newBookWithGenres.OwnerId
                 });
 
-                foreach (var procedure in newAnimalWithProcedures.Procedures)
+                foreach (var genre in newBookWithGenres.Genres)
                 {
-                    await _animalsRepository.AddProcedureAnimal(id, procedure);
+                    await _booksRepository.AddGenreBook(id, genre);
                 }
 
                 scope.Complete();
             }
 
-            return Created(Request.Path.Value ?? "api/animals", newAnimalWithProcedures);
+            return Created(Request.Path.Value ?? "api/animals", newBookWithGenres);
         }
     }
 }

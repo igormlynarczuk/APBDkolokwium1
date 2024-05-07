@@ -12,6 +12,6 @@ public interface IBooksRepository
     Task AddNewBookWithProcedures(NewBookWithGenres newBookWithProcedures);
     
     // Version with transaction scope
-    Task<int> AddAnimal(NewBookDTO animal);
-    Task AddProcedureAnimal(int animalId, ProcedureWithDate procedure);
+    Task<int> AddBook(NewBookDTO book);
+    Task AddGenreBook(int bookId, Genre procedure);
 }

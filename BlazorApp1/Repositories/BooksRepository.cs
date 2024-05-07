@@ -12,7 +12,7 @@ public class BooksRepository : IBooksRepository
 
     public async Task<bool> DoesBookExist(int id)
     {
-        var query = "SELECT 1 FROM Animal WHERE ID = @ID";
+        var query = "SELECT 1 FROM Book WHERE ID = @ID";
 
         await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
         await using SqlCommand command = new SqlCommand();
@@ -77,7 +77,6 @@ public class BooksRepository : IBooksRepository
 	    
 	    command.Parameters.AddWithValue("@Name", newBookWithGenres.PK);
 	    command.Parameters.AddWithValue("@Type", newBookWithGenres.title);
-	    command.Parameters.AddWithValue("@AdmissionDate", newBookWithGenres.AdmissionDate);
 	    command.Parameters.AddWithValue("@OwnerId", newBookWithGenres.OwnerId);
 	    
 	    await connection.OpenAsync();
@@ -89,13 +88,13 @@ public class BooksRepository : IBooksRepository
 	    {
 		    var id = await command.ExecuteScalarAsync();
     
-		    foreach (var procedure in newAnimalWithProcedures.Procedures)
+		    foreach (var genre in newBookWithGenres.Genres)
 		    {
 			    command.Parameters.Clear();
 			    command.CommandText = "INSERT INTO Procedure_Animal VALUES(@ProcedureId, @AnimalId, @Date)";
-			    command.Parameters.AddWithValue("@ProcedureId", procedure.ProcedureId);
+			    command.Parameters.AddWithValue("@GenreId", genre.PK);
 			    command.Parameters.AddWithValue("@AnimalId", id);
-			    command.Parameters.AddWithValue("@Date", procedure.Date);
+			    command.Parameters.AddWithValue("@nam", genre.nam);
 
 			    await command.ExecuteNonQueryAsync();
 		    }
@@ -109,7 +108,7 @@ public class BooksRepository : IBooksRepository
 	    }
     }
 
-    public async Task<int> AddAnimal(NewAnimalDTO animal)
+    public async Task<int> AddBook(NewBookDTO book)
     {
 	    var insert = @"INSERT INTO Animal VALUES(@Name, @Type, @AdmissionDate, @OwnerId);
 					   SELECT @@IDENTITY AS ID;";
@@ -120,10 +119,9 @@ public class BooksRepository : IBooksRepository
 	    command.Connection = connection;
 	    command.CommandText = insert;
 	    
-	    command.Parameters.AddWithValue("@Name", animal.Name);
-	    command.Parameters.AddWithValue("@Type", animal.Type);
-	    command.Parameters.AddWithValue("@AdmissionDate", animal.AdmissionDate);
-	    command.Parameters.AddWithValue("@OwnerId", animal.OwnerId);
+	    command.Parameters.AddWithValue("@Name", book.PK);
+	    command.Parameters.AddWithValue("@Type", book.title);
+	    command.Parameters.AddWithValue("@OwnerId", book.OwnerId);
 	    
 	    await connection.OpenAsync();
 	    
@@ -134,7 +132,7 @@ public class BooksRepository : IBooksRepository
 	    return Convert.ToInt32(id);
     }
 
-    public async Task AddProcedureAnimal(int animalId, ProcedureWithDate procedure)
+    public async Task AddGenreBook(int bookId, Genre genre)
     {
 	    var query = $"INSERT INTO Procedure_Animal VALUES(@ProcedureID, @AnimalID, @Date)";
 
@@ -143,9 +141,9 @@ public class BooksRepository : IBooksRepository
 
 	    command.Connection = connection;
 	    command.CommandText = query;
-	    command.Parameters.AddWithValue("@ProcedureID", procedure.ProcedureId);
-	    command.Parameters.AddWithValue("@AnimalID", animalId);
-	    command.Parameters.AddWithValue("@Date", procedure.Date);
+	    command.Parameters.AddWithValue("@ProcedureID", genre.PK);
+	    command.Parameters.AddWithValue("@AnimalID", bookId);
+	    command.Parameters.AddWithValue("@Date", genre.nam);
 
 	    await connection.OpenAsync();
 
