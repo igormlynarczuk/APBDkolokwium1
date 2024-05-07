@@ -64,6 +64,11 @@ public class BooksRepository : IBooksRepository
 	    return res is not null;
     }
 
+    public Task<GenresBookDTO> GetGenresBook(int id)
+    {
+	    throw new NotImplementedException();
+    }
+
     public async Task AddNewBookWithProcedures(NewBookWithGenres newBookWithGenres)
     {
 	    var insert = @"INSERT INTO Animal VALUES(@Name, @Type, @AdmissionDate, @OwnerId);

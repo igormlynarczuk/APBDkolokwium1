@@ -7,6 +7,7 @@ public interface IBooksRepository
     Task<bool> DoesBookExist(int id);
     Task<bool> DoesOwnerExist(int id);
     Task<bool> DoesGenreExist(int id);
+    Task<GenresBookDTO> GetGenresBook(int id);
 
     // Version with implicit transaction
     Task AddNewBookWithProcedures(NewBookWithGenres newBookWithProcedures);

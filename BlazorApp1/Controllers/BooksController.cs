@@ -17,10 +17,22 @@ public class BooksController
         {
             _booksRepository = animalsRepository;
         }
+        
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetAnimal(int id)
+        {
+            if (!await _booksRepository.DoesBookExist(id))
+                return NotFound($"Animal with given ID - {id} doesn't exist");
+
+            var animal = await _booksRepository.GetGenresBook(id);
+            
+            return Ok(animal);
+        }
+        
 
         // Version with implicit transaction
         [HttpPost]
-        public async Task<IActionResult> AddAnimal(NewBookWithGenres newBookWithGenres)
+        public async Task<IActionResult> AddBook(NewBookWithGenres newBookWithGenres)
         {
             if (!await _booksRepository.DoesOwnerExist(newBookWithGenres.OwnerId))
                 return NotFound($"Owner with given ID - {newBookWithGenres.OwnerId} doesn't exist");
@@ -39,7 +51,7 @@ public class BooksController
         // Version with transaction scope
         [HttpPost]
         [Route("with-scope")]
-        public async Task<IActionResult> AddAnimalV2(NewBookWithGenres newBookWithGenres)
+        public async Task<IActionResult> AddBookV2(NewBookWithGenres newBookWithGenres)
         {
 
             if (!await _booksRepository.DoesOwnerExist(newBookWithGenres.OwnerId))
