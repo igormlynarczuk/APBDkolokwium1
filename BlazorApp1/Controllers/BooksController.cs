@@ -19,7 +19,7 @@ public class BooksController
         }
         
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetAnimal(int id)
+        public async Task<IActionResult> GetGenresBook(int id)
         {
             if (!await _booksRepository.DoesBookExist(id))
                 return NotFound($"Animal with given ID - {id} doesn't exist");
