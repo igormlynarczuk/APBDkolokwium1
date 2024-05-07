@@ -91,14 +91,11 @@ public class BooksRepository : IBooksRepository
 			    }
 		    }
 	    }
- 
-	    // Pobranie informacji o książce, np. tytuł i właściciel
-	    // Ta część może być dostosowana do rzeczywistych danych w bazie danych
 	    GenresBookDTO bookWithGenres = new GenresBookDTO
 	    {
-		    PK = id, // Zakładam, że PK to identyfikator książki
-		    title = "Tytuł książki", // Przykładowy tytuł, można pobrać z bazy danych
-		    OwnerId = 1, // Przykładowy identyfikator właściciela, można pobrać z bazy danych
+		    PK = id,
+		    title = "Tytuł książki",
+		    OwnerId = 1,
 		    Genres = genres
 	    };
  
