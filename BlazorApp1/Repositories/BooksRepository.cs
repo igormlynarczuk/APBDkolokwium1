@@ -48,7 +48,7 @@ public class BooksRepository : IBooksRepository
 
     public async Task<bool> DoesGenreExist(int id)
     {
-	    var query = "SELECT 1 FROM [Procedure] WHERE ID = @ID";
+	    var query = "SELECT 1 FROM genres WHERE PK = @ID";
 
 	    await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
 	    await using SqlCommand command = new SqlCommand();
