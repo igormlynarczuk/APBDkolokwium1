@@ -2,6 +2,7 @@
 using BlazorApp1.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using System.Transactions;
+using System.Threading.Tasks;
 
 namespace BlazorApp1.Controllers
 {
@@ -27,36 +28,46 @@ namespace BlazorApp1.Controllers
             return Ok(bookGenres);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> AddBook(NewBookWithGenres newBookWithGenres)
+        [HttpGet("{id}/authors")]
+        public async Task<IActionResult> GetAuthorsBook(int id)
         {
-            if (!await _booksRepository.DoesOwnerExist(newBookWithGenres.OwnerId))
-                return NotFound($"Owner with given ID - {newBookWithGenres.OwnerId} doesn't exist");
+            if (!await _booksRepository.DoesBookExist(id))
+                return NotFound($"Book with given ID - {id} doesn't exist");
 
-            foreach (var genre in newBookWithGenres.Genres)
+            var bookAuthors = await _booksRepository.GetAuthorsBook(id);
+
+            return Ok(bookAuthors);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddBook(NewBookWithAuthors newBookWithAuthors)
+        {
+            if (!await _booksRepository.DoesOwnerExist(newBookWithAuthors.OwnerId))
+                return NotFound($"Owner with given ID - {newBookWithAuthors.OwnerId} doesn't exist");
+
+            foreach (var author in newBookWithAuthors.Authors)
             {
-                if (!await _booksRepository.DoesGenreExist(genre.PK))
-                    return NotFound($"Genre with given ID - {genre.PK} doesn't exist");
+                if (!await _booksRepository.DoesAuthorExist(author.PK))
+                    return NotFound($"Author with given ID - {author.PK} doesn't exist");
             }
 
             using (TransactionScope scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
                 var id = await _booksRepository.AddBook(new NewBookDTO()
                 {
-                    PK = newBookWithGenres.PK,
-                    title = newBookWithGenres.title,
-                    OwnerId = newBookWithGenres.OwnerId
+                    title = newBookWithAuthors.title,
+                    OwnerId = newBookWithAuthors.OwnerId
                 });
 
-                foreach (var genre in newBookWithGenres.Genres)
+                foreach (var author in newBookWithAuthors.Authors)
                 {
-                    await _booksRepository.AddGenreBook(id, genre);
+                    await _booksRepository.AddAuthorBook(id, author);
                 }
 
                 scope.Complete();
             }
 
-            return Created(Request.Path.Value ?? "api/books", newBookWithGenres);
+            return Created(Request.Path.Value ?? "api/books", newBookWithAuthors);
         }
     }
 }

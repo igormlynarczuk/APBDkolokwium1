@@ -70,6 +70,24 @@ namespace BlazorApp1.Repositories
             return res is not null;
         }
 
+        public async Task<bool> DoesAuthorExist(int id)
+        {
+            var query = "SELECT 1 FROM authors WHERE PK = @ID";
+
+            await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
+            await using SqlCommand command = new SqlCommand();
+
+            command.Connection = connection;
+            command.CommandText = query;
+            command.Parameters.AddWithValue("@ID", id);
+
+            await connection.OpenAsync();
+
+            var res = await command.ExecuteScalarAsync();
+
+            return res is not null;
+        }
+
         public async Task<GenresBookDTO> GetGenresBook(int id)
         {
             List<GenreDTO> genres = new List<GenreDTO>();
@@ -110,6 +128,46 @@ namespace BlazorApp1.Repositories
             return bookWithGenres;
         }
 
+        public async Task<AuthorsBookDTO> GetAuthorsBook(int id)
+        {
+            List<AuthorDTO> authors = new List<AuthorDTO>();
+
+            using (SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default")))
+            {
+                await connection.OpenAsync();
+
+                string query = @"SELECT authors.PK, authors.name 
+                                 FROM authors 
+                                 INNER JOIN books_authors ON authors.PK = books_authors.FK_author 
+                                 WHERE books_authors.FK_book = @BookId;";
+
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@BookId", id);
+                    SqlDataReader reader = await command.ExecuteReaderAsync();
+                    while (reader.Read())
+                    {
+                        authors.Add(new AuthorDTO
+                        {
+                            PK = Convert.ToInt32(reader["PK"]),
+                            name = reader["name"].ToString()
+                        });
+                    }
+                }
+            }
+
+            // Dummy data for title and OwnerId; replace with actual queries if needed
+            AuthorsBookDTO bookWithAuthors = new AuthorsBookDTO
+            {
+                PK = id,
+                title = "Dummy Book Title", // Replace with actual book title query if needed
+                OwnerId = 1, // Replace with actual owner query if needed
+                Authors = authors
+            };
+
+            return bookWithAuthors;
+        }
+
         public async Task<int> AddBook(NewBookDTO book)
         {
             var insert = @"INSERT INTO books (title) 
@@ -145,6 +203,24 @@ namespace BlazorApp1.Repositories
             command.CommandText = query;
             command.Parameters.AddWithValue("@BookId", bookId);
             command.Parameters.AddWithValue("@GenreId", genre.PK);
+
+            await connection.OpenAsync();
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task AddAuthorBook(int bookId, Author author)
+        {
+            var query = @"INSERT INTO books_authors (FK_book, FK_author) 
+                          VALUES (@BookId, @AuthorId)";
+
+            await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
+            await using SqlCommand command = new SqlCommand();
+
+            command.Connection = connection;
+            command.CommandText = query;
+            command.Parameters.AddWithValue("@BookId", bookId);
+            command.Parameters.AddWithValue("@AuthorId", author.PK);
 
             await connection.OpenAsync();
 
