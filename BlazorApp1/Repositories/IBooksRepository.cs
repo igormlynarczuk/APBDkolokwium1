@@ -10,9 +10,6 @@ public interface IBooksRepository
     Task<GenresBookDTO> GetGenresBook(int id);
 
     // Version with implicit transaction
-    Task AddNewBookWithProcedures(NewBookWithGenres newBookWithProcedures);
-    
-    // Version with transaction scope
     Task<int> AddBook(NewBookDTO book);
-    Task AddGenreBook(int bookId, Genre procedure);
+    Task AddGenreBook(int bookId, Genre genre);
 }

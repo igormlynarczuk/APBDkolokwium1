@@ -11,7 +11,7 @@ public class GenresBookDTO
 public class GenreDTO
 {
     public int PK { get; set; }
-    public String nam { get; set; }
+    public string name { get; set; }
 }
 
 

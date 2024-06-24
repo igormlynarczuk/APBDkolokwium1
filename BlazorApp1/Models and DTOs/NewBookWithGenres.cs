@@ -11,5 +11,5 @@ public class NewBookWithGenres
 public class Genre
 {
     public int PK { get; set; }
-    public String nam { get; set; }
+    public string name { get; set; }
 }

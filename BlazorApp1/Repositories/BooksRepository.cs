@@ -1,190 +1,154 @@
-﻿namespace BlazorApp1.Repositories;
+﻿using BlazorApp1.Models_and_DTOs;
 using Microsoft.Data.SqlClient;
-using BlazorApp1.Models_and_DTOs;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-public class BooksRepository : IBooksRepository
+namespace BlazorApp1.Repositories
 {
-    private readonly IConfiguration _configuration;
-    public BooksRepository(IConfiguration configuration)
+    public class BooksRepository : IBooksRepository
     {
-        _configuration = configuration;
-    }
+        private readonly IConfiguration _configuration;
 
-    public async Task<bool> DoesBookExist(int id)
-    {
-        var query = "SELECT 1 FROM Book WHERE ID = @ID";
+        public BooksRepository(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
 
-        await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
-        await using SqlCommand command = new SqlCommand();
+        public async Task<bool> DoesBookExist(int id)
+        {
+            var query = "SELECT 1 FROM books WHERE PK = @ID";
 
-        command.Connection = connection;
-        command.CommandText = query;
-        command.Parameters.AddWithValue("@ID", id);
+            await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
+            await using SqlCommand command = new SqlCommand();
 
-        await connection.OpenAsync();
+            command.Connection = connection;
+            command.CommandText = query;
+            command.Parameters.AddWithValue("@ID", id);
 
-        var res = await command.ExecuteScalarAsync();
+            await connection.OpenAsync();
 
-        return res is not null;
-    }
+            var res = await command.ExecuteScalarAsync();
 
-    public async Task<bool> DoesOwnerExist(int id)
-    {
-	    var query = "SELECT 1 FROM Owner WHERE ID = @ID";
+            return res is not null;
+        }
 
-	    await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
-	    await using SqlCommand command = new SqlCommand();
+        public async Task<bool> DoesOwnerExist(int id)
+        {
+            var query = "SELECT 1 FROM publishing_houses WHERE PK = @ID";
 
-	    command.Connection = connection;
-	    command.CommandText = query;
-	    command.Parameters.AddWithValue("@ID", id);
+            await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
+            await using SqlCommand command = new SqlCommand();
 
-	    await connection.OpenAsync();
+            command.Connection = connection;
+            command.CommandText = query;
+            command.Parameters.AddWithValue("@ID", id);
 
-	    var res = await command.ExecuteScalarAsync();
+            await connection.OpenAsync();
 
-	    return res is not null;
-    }
+            var res = await command.ExecuteScalarAsync();
 
-    public async Task<bool> DoesGenreExist(int id)
-    {
-	    var query = "SELECT 1 FROM genres WHERE PK = @ID";
+            return res is not null;
+        }
 
-	    await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
-	    await using SqlCommand command = new SqlCommand();
+        public async Task<bool> DoesGenreExist(int id)
+        {
+            var query = "SELECT 1 FROM genres WHERE PK = @ID";
 
-	    command.Connection = connection;
-	    command.CommandText = query;
-	    command.Parameters.AddWithValue("@ID", id);
+            await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
+            await using SqlCommand command = new SqlCommand();
 
-	    await connection.OpenAsync();
+            command.Connection = connection;
+            command.CommandText = query;
+            command.Parameters.AddWithValue("@ID", id);
 
-	    var res = await command.ExecuteScalarAsync();
+            await connection.OpenAsync();
 
-	    return res is not null;
-    }
+            var res = await command.ExecuteScalarAsync();
 
-    public async Task<GenresBookDTO> GetGenresBook(int id)
-    {
-	    List<GenreDTO> genres = new List<GenreDTO>();
- 
-	    using (SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default")))
-	    {
-		    await connection.OpenAsync();
- 
-		    string query = @"SELECT genres.PK, genres.name 
+            return res is not null;
+        }
+
+        public async Task<GenresBookDTO> GetGenresBook(int id)
+        {
+            List<GenreDTO> genres = new List<GenreDTO>();
+
+            using (SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default")))
+            {
+                await connection.OpenAsync();
+
+                string query = @"SELECT genres.PK, genres.name 
                                  FROM genres 
                                  INNER JOIN books_genres ON genres.PK = books_genres.FK_genre 
                                  WHERE books_genres.FK_book = @BookId;";
- 
-		    using (SqlCommand command = new SqlCommand(query, connection))
-		    {
-			    command.Parameters.AddWithValue("@BookId", id);
-			    SqlDataReader reader = await command.ExecuteReaderAsync();
-			    while (reader.Read())
-			    {
-				    genres.Add(new GenreDTO
-				    {
-					    PK = Convert.ToInt32(reader["PK"]),
-					    nam = reader["name"].ToString()
-				    });
-			    }
-		    }
-	    }
-	    GenresBookDTO bookWithGenres = new GenresBookDTO
-	    {
-		    PK = id,
-		    title = "Tytuł książki",
-		    OwnerId = 1,
-		    Genres = genres
-	    };
- 
-	    return bookWithGenres;
-    }
 
-    public async Task AddNewBookWithProcedures(NewBookWithGenres newBookWithGenres)
-    {
-	    var insert = @"INSERT INTO Animal VALUES(@Name, @Type, @AdmissionDate, @OwnerId);
-					   SELECT @@IDENTITY AS ID;";
-	    
-	    await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
-	    await using SqlCommand command = new SqlCommand();
-	    
-	    command.Connection = connection;
-	    command.CommandText = insert;
-	    
-	    command.Parameters.AddWithValue("@Name", newBookWithGenres.PK);
-	    command.Parameters.AddWithValue("@Type", newBookWithGenres.title);
-	    command.Parameters.AddWithValue("@OwnerId", newBookWithGenres.OwnerId);
-	    
-	    await connection.OpenAsync();
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@BookId", id);
+                    SqlDataReader reader = await command.ExecuteReaderAsync();
+                    while (reader.Read())
+                    {
+                        genres.Add(new GenreDTO
+                        {
+                            PK = Convert.ToInt32(reader["PK"]),
+                            name = reader["name"].ToString()
+                        });
+                    }
+                }
+            }
 
-	    var transaction = await connection.BeginTransactionAsync();
-	    command.Transaction = transaction as SqlTransaction;
-	    
-	    try
-	    {
-		    var id = await command.ExecuteScalarAsync();
-    
-		    foreach (var genre in newBookWithGenres.Genres)
-		    {
-			    command.Parameters.Clear();
-			    command.CommandText = "INSERT INTO Procedure_Animal VALUES(@ProcedureId, @AnimalId, @Date)";
-			    command.Parameters.AddWithValue("@GenreId", genre.PK);
-			    command.Parameters.AddWithValue("@AnimalId", id);
-			    command.Parameters.AddWithValue("@nam", genre.nam);
+            // Dummy data for title and OwnerId; replace with actual queries if needed
+            GenresBookDTO bookWithGenres = new GenresBookDTO
+            {
+                PK = id,
+                title = "Dummy Book Title", // Replace with actual book title query if needed
+                OwnerId = 1, // Replace with actual owner query if needed
+                Genres = genres
+            };
 
-			    await command.ExecuteNonQueryAsync();
-		    }
+            return bookWithGenres;
+        }
 
-		    await transaction.CommitAsync();
-	    }
-	    catch (Exception)
-	    {
-		    await transaction.RollbackAsync();
-		    throw;
-	    }
-    }
+        public async Task<int> AddBook(NewBookDTO book)
+        {
+            var insert = @"INSERT INTO books (title) 
+                           OUTPUT INSERTED.PK
+                           VALUES (@Title);";
 
-    public async Task<int> AddBook(NewBookDTO book)
-    {
-	    var insert = @"INSERT INTO Animal VALUES(@Name, @Type, @AdmissionDate, @OwnerId);
-					   SELECT @@IDENTITY AS ID;";
-	    
-	    await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
-	    await using SqlCommand command = new SqlCommand();
-	    
-	    command.Connection = connection;
-	    command.CommandText = insert;
-	    
-	    command.Parameters.AddWithValue("@Name", book.PK);
-	    command.Parameters.AddWithValue("@Type", book.title);
-	    command.Parameters.AddWithValue("@OwnerId", book.OwnerId);
-	    
-	    await connection.OpenAsync();
-	    
-	    var id = await command.ExecuteScalarAsync();
+            await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
+            await using SqlCommand command = new SqlCommand();
 
-	    if (id is null) throw new Exception();
-	    
-	    return Convert.ToInt32(id);
-    }
+            command.Connection = connection;
+            command.CommandText = insert;
 
-    public async Task AddGenreBook(int bookId, Genre genre)
-    {
-	    var query = $"INSERT INTO Procedure_Animal VALUES(@ProcedureID, @AnimalID, @Date)";
+            command.Parameters.AddWithValue("@Title", book.title);
 
-	    await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
-	    await using SqlCommand command = new SqlCommand();
+            await connection.OpenAsync();
 
-	    command.Connection = connection;
-	    command.CommandText = query;
-	    command.Parameters.AddWithValue("@ProcedureID", genre.PK);
-	    command.Parameters.AddWithValue("@AnimalID", bookId);
-	    command.Parameters.AddWithValue("@Date", genre.nam);
+            var id = await command.ExecuteScalarAsync();
 
-	    await connection.OpenAsync();
+            if (id is null) throw new Exception("Failed to insert book");
 
-	    await command.ExecuteNonQueryAsync();
+            return Convert.ToInt32(id);
+        }
+
+        public async Task AddGenreBook(int bookId, Genre genre)
+        {
+            var query = @"INSERT INTO books_genres (FK_book, FK_genre) 
+                          VALUES (@BookId, @GenreId)";
+
+            await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
+            await using SqlCommand command = new SqlCommand();
+
+            command.Connection = connection;
+            command.CommandText = query;
+            command.Parameters.AddWithValue("@BookId", bookId);
+            command.Parameters.AddWithValue("@GenreId", genre.PK);
+
+            await connection.OpenAsync();
+
+            await command.ExecuteNonQueryAsync();
+        }
     }
 }
